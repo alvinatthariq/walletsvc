@@ -51,18 +51,12 @@ func (d *domain) InitAccountWallet(customerID string) (customerToken entity.Cust
 }
 
 func (d *domain) EnableWallet(token string) (wallet entity.Wallet, err error) {
-	var customerToken entity.CustomerToken
-	tx := d.gorm.First(&customerToken, "token = ?", token)
-	err = tx.Error
+	customerToken, err := d.getCustomerTokenByToken(token)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return wallet, entity.ErrorInvalidAuthToken
-		}
-
 		return wallet, err
 	}
 
-	tx = d.gorm.First(&wallet, "owned_by = ?", customerToken.CustomerID)
+	tx := d.gorm.First(&wallet, "owned_by = ?", customerToken.CustomerID)
 	err = tx.Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -119,4 +113,37 @@ func generateSecureToken(length int) string {
 		return ""
 	}
 	return hex.EncodeToString(b)
+}
+
+func (d *domain) GetWallet(token string) (wallet entity.Wallet, err error) {
+	customerToken, err := d.getCustomerTokenByToken(token)
+	if err != nil {
+		return wallet, err
+	}
+
+	tx := d.gorm.First(&wallet, "owned_by = ?", customerToken.CustomerID)
+	err = tx.Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return wallet, entity.ErrorWalletNotFound
+		}
+
+		return wallet, err
+	}
+
+	return wallet, nil
+}
+
+func (d *domain) getCustomerTokenByToken(token string) (customerToken entity.CustomerToken, err error) {
+	tx := d.gorm.First(&customerToken, "token = ?", token)
+	err = tx.Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return customerToken, entity.ErrorInvalidAuthToken
+		}
+
+		return customerToken, err
+	}
+
+	return customerToken, nil
 }

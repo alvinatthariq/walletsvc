@@ -56,3 +56,26 @@ func getTokenFromAuth(auth string) (token string, err error) {
 
 	return token, nil
 }
+
+func (c *controller) GetWallet(w http.ResponseWriter, r *http.Request) {
+	authorization := r.Header.Get("Authorization")
+
+	token, err := getTokenFromAuth(authorization)
+	if err != nil {
+		httpRespError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	wallet, err := c.domain.GetWallet(token)
+	if err != nil {
+		if errors.Is(err, entity.ErrorWalletNotFound) {
+			httpRespError(w, r, err, http.StatusNotFound)
+			return
+		}
+
+		httpRespError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	httpRespSuccess(w, r, http.StatusOK, wallet, nil)
+}

@@ -13,5 +13,6 @@ var (
 	ErrorAccountAlreadyExist  error = fmt.Errorf("Account Wallet Already Exist")
 	ErrorWalletAlreadyExist   error = fmt.Errorf("Wallet Already Exist")
 	ErrorWalletAlreadyEnabled error = fmt.Errorf("Wallet Already Enabled")
+	ErrorWalletNotFound       error = fmt.Errorf("Wallet Not Found")
 	ErrorInvalidAuthToken     error = fmt.Errorf("Invalid Auth Token")
 )
