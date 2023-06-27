@@ -10,10 +10,11 @@ const (
 )
 
 var (
-	ErrorAccountWalletAlreadyExist error = fmt.Errorf("Account Wallet Already Exist")
-	ErrorWalletAlreadyExist        error = fmt.Errorf("Wallet Already Exist")
-	ErrorWalletAlreadyEnabled      error = fmt.Errorf("Wallet Already Enabled")
-	ErrorWalletDisabled            error = fmt.Errorf("Wallet Disabled")
-	ErrorWalletNotFound            error = fmt.Errorf("Wallet Not Found")
-	ErrorInvalidAuthToken          error = fmt.Errorf("Invalid Auth Token")
+	ErrorAccountWalletAlreadyExist      error = fmt.Errorf("Account Wallet Already Exist")
+	ErrorWalletAlreadyExist             error = fmt.Errorf("Wallet Already Exist")
+	ErrorWalletAlreadyEnabled           error = fmt.Errorf("Wallet Already Enabled")
+	ErrorDepositReferenceIDMustBeUnique error = fmt.Errorf("Deposit Reference ID Must Be Unique")
+	ErrorWalletDisabled                 error = fmt.Errorf("Wallet Disabled")
+	ErrorWalletNotFound                 error = fmt.Errorf("Wallet Not Found")
+	ErrorInvalidAuthToken               error = fmt.Errorf("Invalid Auth Token")
 )

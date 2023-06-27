@@ -18,6 +18,7 @@ type DomainItf interface {
 	DisableWallet(token string) (wallet entity.Wallet, err error)
 	GetWallet(token string) (wallet entity.Wallet, err error)
 	GetWalletTransaction(token string) (transactions []entity.Transaction, err error)
+	CreateWalletDeposit(token string, amount float64, refID string) (deposit entity.Deposit, err error)
 }
 
 func Init(gorm *gorm.DB, redisClient *redis.Client) DomainItf {

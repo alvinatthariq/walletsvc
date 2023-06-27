@@ -30,7 +30,7 @@ func (c *controller) Serve() {
 	c.router.HandleFunc("/api/v1/wallet", c.DisableWallet).Methods("PATCH")
 	c.router.HandleFunc("/api/v1/wallet", c.GetWallet).Methods("GET")
 	c.router.HandleFunc("/api/v1/wallet/transactions", c.GetWalletTransaction).Methods("GET")
-	// c.router.HandleFunc("/api/v1/wallet/deposits", c.CreateWalletDeposit).Methods("POST")
+	c.router.HandleFunc("/api/v1/wallet/deposits", c.CreateWalletDeposit).Methods("POST")
 	// c.router.HandleFunc("/api/v1/wallet/withdrawals", c.CreateWalletWithdraw).Methods("POST")
 
 }

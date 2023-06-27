@@ -39,3 +39,12 @@ type HTTPTransactionResp struct {
 type HTTPTransactionData struct {
 	Transactions []Transaction `json:"transactions"`
 }
+
+type HTTPDepositResp struct {
+	Status string          `json:"status"`
+	Data   HTTPDepositData `json:"data"`
+}
+
+type HTTPDepositData struct {
+	Deposit Deposit `json:"deposit"`
+}

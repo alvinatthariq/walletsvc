@@ -14,8 +14,7 @@ import (
 )
 
 func (d *domain) InitAccountWallet(customerID string) (accountWallet entity.AccountWallet, err error) {
-	tx := d.gorm.First(&accountWallet, "customer_id = ?", customerID)
-	err = tx.Error
+	err = d.gorm.First(&accountWallet, "customer_id = ?", customerID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// create account wallet if not exist
@@ -27,8 +26,7 @@ func (d *domain) InitAccountWallet(customerID string) (accountWallet entity.Acco
 			}
 
 			// create to db
-			tx := d.gorm.Create(&accountWallet)
-			err = tx.Error
+			err = d.gorm.Create(&accountWallet).Error
 			if err != nil {
 				var mysqlError *mysql.MySQLError
 				if errors.As(err, &mysqlError) {
@@ -69,8 +67,7 @@ func (d *domain) EnableWallet(token string) (wallet entity.Wallet, err error) {
 			}
 
 			// create to db
-			tx := d.gorm.Create(&wallet)
-			err = tx.Error
+			err = d.gorm.Create(&wallet).Error
 			if err != nil {
 				var mysqlError *mysql.MySQLError
 				if errors.As(err, &mysqlError) {
@@ -96,8 +93,7 @@ func (d *domain) EnableWallet(token string) (wallet entity.Wallet, err error) {
 		// update wallet status to enabled
 		wallet.Status = "enabled"
 		wallet.EnabledAt = time.Now().UTC()
-		tx := d.gorm.Save(wallet)
-		err = tx.Error
+		err = d.gorm.Save(wallet).Error
 		if err != nil {
 			return wallet, err
 		}
@@ -119,8 +115,7 @@ func (d *domain) DisableWallet(token string) (wallet entity.Wallet, err error) {
 
 	// update status to disabled
 	wallet.Status = "disabled"
-	tx := d.gorm.Save(wallet)
-	err = tx.Error
+	err = d.gorm.Save(wallet).Error
 	if err != nil {
 		return wallet, err
 	}
@@ -151,8 +146,7 @@ func (d *domain) GetWallet(token string) (wallet entity.Wallet, err error) {
 }
 
 func (d *domain) getAccountWalletByToken(token string) (accountWallet entity.AccountWallet, err error) {
-	tx := d.gorm.First(&accountWallet, "token = ?", token)
-	err = tx.Error
+	err = d.gorm.First(&accountWallet, "token = ?", token).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return accountWallet, entity.ErrorInvalidAuthToken
@@ -165,8 +159,7 @@ func (d *domain) getAccountWalletByToken(token string) (accountWallet entity.Acc
 }
 
 func (d *domain) getWalletByCustomerID(customerID string) (wallet entity.Wallet, err error) {
-	tx := d.gorm.First(&wallet, "owned_by = ?", customerID)
-	err = tx.Error
+	err = d.gorm.First(&wallet, "owned_by = ?", customerID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return wallet, entity.ErrorWalletNotFound
@@ -197,4 +190,64 @@ func (d *domain) GetWalletTransaction(token string) (transactions []entity.Trans
 	err = tx.Error
 
 	return transactions, err
+}
+
+func (d *domain) CreateWalletDeposit(token string, amount float64, refID string) (deposit entity.Deposit, err error) {
+	customerToken, err := d.getAccountWalletByToken(token)
+	if err != nil {
+		return deposit, err
+	}
+
+	wallet, err := d.getWalletByCustomerID(customerToken.CustomerID)
+	if err != nil {
+		return deposit, err
+	}
+
+	if wallet.Status == "disabled" {
+		return deposit, entity.ErrorWalletDisabled
+	}
+
+	deposit = entity.Deposit{
+		ID:          uuid.New().String(),
+		DepositedBy: customerToken.CustomerID,
+		Status:      "success",
+		DepositedAt: time.Now().UTC(),
+		Amount:      amount,
+		ReferenceID: refID,
+	}
+
+	err = d.gorm.Transaction(func(tx *gorm.DB) error {
+		// create transaction
+		transaction := entity.Transaction{
+			ID:              deposit.ID,
+			ReferenceID:     deposit.ReferenceID,
+			Type:            "deposit",
+			OwnedBy:         deposit.DepositedBy,
+			Amount:          deposit.Amount,
+			PreviousBalance: wallet.Balance,
+			CurrentBalance:  wallet.Balance + amount,
+			CreatedAt:       deposit.DepositedAt,
+		}
+		if err := tx.Create(transaction).Error; err != nil {
+			var mysqlError *mysql.MySQLError
+			if errors.As(err, &mysqlError) {
+				// check duplicate constraint
+				if mysqlError.Number == entity.CodeMySQLDuplicateEntry {
+					return entity.ErrorDepositReferenceIDMustBeUnique
+				}
+			}
+
+			return err
+		}
+
+		// update wallet balance
+		wallet.Balance += amount
+		if err := tx.Save(wallet).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return deposit, err
 }

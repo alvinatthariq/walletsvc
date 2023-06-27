@@ -88,6 +88,17 @@ func httpRespSuccess(w http.ResponseWriter, r *http.Request, statusCode int, res
 		if err != nil {
 			statusCode = http.StatusInternalServerError
 		}
+	case entity.Deposit:
+		httpResp := &entity.HTTPDepositResp{
+			Data: entity.HTTPDepositData{
+				Deposit: data,
+			},
+			Status: "success",
+		}
+		raw, err = json.Marshal(httpResp)
+		if err != nil {
+			statusCode = http.StatusInternalServerError
+		}
 
 	default:
 		httpRespError(w, r, fmt.Errorf("cannot cast type of %+v", data), http.StatusInternalServerError)
