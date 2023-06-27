@@ -49,6 +49,8 @@ Run docker compose
   docker-compose up -d
 ```
 
+Server will be running at localhost:8080
+
 
 ## Run Locally
 
@@ -78,6 +80,8 @@ Start the server
   make run
 ```
 
+Server will be running at localhost:8080
+
 
 ## Running Tests
 
@@ -87,3 +91,6 @@ To run tests, run the following command
   make run-test
 ```
 
+## Documentation
+
+[Documentation](https://documenter.getpostman.com/view/27910682/2s93z9agqK)
