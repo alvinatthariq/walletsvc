@@ -82,3 +82,25 @@ func (c *controller) GetWalletTransaction(w http.ResponseWriter, r *http.Request
 
 	httpRespSuccess(w, r, http.StatusOK, transactions, nil)
 }
+
+func (c *controller) DisableWallet(w http.ResponseWriter, r *http.Request) {
+	authorization := r.Header.Get("Authorization")
+
+	token := strings.Replace(authorization, "Token ", "", -1)
+
+	wallet, err := c.domain.DisableWallet(token)
+	if err != nil {
+		if errors.Is(err, entity.ErrorWalletNotFound) {
+			httpRespError(w, r, err, http.StatusNotFound)
+			return
+		} else if errors.Is(err, entity.ErrorWalletDisabled) {
+			httpRespError(w, r, err, http.StatusNotFound)
+			return
+		}
+
+		httpRespError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	httpRespSuccess(w, r, http.StatusOK, wallet, nil)
+}

@@ -27,7 +27,7 @@ func Init(gorm *gorm.DB, router *mux.Router, domain domain.DomainItf) {
 func (c *controller) Serve() {
 	c.router.HandleFunc("/api/v1/init", c.InitAccountWallet).Methods("POST")
 	c.router.HandleFunc("/api/v1/wallet", c.EnableWallet).Methods("POST")
-	// c.router.HandleFunc("/api/v1/wallet", c.DisableWallet).Methods("PATCH")
+	c.router.HandleFunc("/api/v1/wallet", c.DisableWallet).Methods("PATCH")
 	c.router.HandleFunc("/api/v1/wallet", c.GetWallet).Methods("GET")
 	c.router.HandleFunc("/api/v1/wallet/transactions", c.GetWalletTransaction).Methods("GET")
 	// c.router.HandleFunc("/api/v1/wallet/deposits", c.CreateWalletDeposit).Methods("POST")

@@ -56,10 +56,9 @@ func (d *domain) EnableWallet(token string) (wallet entity.Wallet, err error) {
 		return wallet, err
 	}
 
-	tx := d.gorm.First(&wallet, "owned_by = ?", customerToken.CustomerID)
-	err = tx.Error
+	wallet, err = d.getWalletByCustomerID(customerToken.CustomerID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, entity.ErrorWalletNotFound) {
 			// create wallet
 			wallet = entity.Wallet{
 				ID:        uuid.New().String(),
@@ -97,11 +96,33 @@ func (d *domain) EnableWallet(token string) (wallet entity.Wallet, err error) {
 		// update wallet status to enabled
 		wallet.Status = "enabled"
 		wallet.EnabledAt = time.Now().UTC()
-		tx = d.gorm.Save(wallet)
+		tx := d.gorm.Save(wallet)
 		err = tx.Error
 		if err != nil {
 			return wallet, err
 		}
+	}
+
+	return wallet, nil
+}
+
+func (d *domain) DisableWallet(token string) (wallet entity.Wallet, err error) {
+	customerToken, err := d.getAccountWalletByToken(token)
+	if err != nil {
+		return wallet, err
+	}
+
+	wallet, err = d.getWalletByCustomerID(customerToken.CustomerID)
+	if err != nil {
+		return wallet, err
+	}
+
+	// update status to disabled
+	wallet.Status = "disabled"
+	tx := d.gorm.Save(wallet)
+	err = tx.Error
+	if err != nil {
+		return wallet, err
 	}
 
 	return wallet, nil
