@@ -21,3 +21,12 @@ type HTTPInitWalletResp struct {
 type HTTPInitWalletData struct {
 	Token string `json:"token"`
 }
+
+type HTTPWalletResp struct {
+	Status string         `json:"status"`
+	Data   HTTPWalletData `json:"data"`
+}
+
+type HTTPWalletData struct {
+	Wallet Wallet `json:"wallet"`
+}

@@ -10,5 +10,8 @@ const (
 )
 
 var (
-	ErrorAccountAlreadyExist error = fmt.Errorf("Account Wallet Already Exist")
+	ErrorAccountAlreadyExist  error = fmt.Errorf("Account Wallet Already Exist")
+	ErrorWalletAlreadyExist   error = fmt.Errorf("Wallet Already Exist")
+	ErrorWalletAlreadyEnabled error = fmt.Errorf("Wallet Already Enabled")
+	ErrorInvalidAuthToken     error = fmt.Errorf("Invalid Auth Token")
 )

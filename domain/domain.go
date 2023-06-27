@@ -14,6 +14,7 @@ type domain struct {
 
 type DomainItf interface {
 	InitAccountWallet(customerID string) (customerToken entity.CustomerToken, err error)
+	EnableWallet(token string) (wallet entity.Wallet, err error)
 }
 
 func Init(gorm *gorm.DB, redisClient *redis.Client) DomainItf {
