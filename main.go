@@ -65,7 +65,7 @@ func ConnectSQL(connectionString string) {
 
 func MigrateSQL() {
 	dbgorm.AutoMigrate(&entity.Wallet{})
-	dbgorm.AutoMigrate(&entity.CustomerToken{})
+	dbgorm.AutoMigrate(&entity.AccountWallet{})
 	dbgorm.AutoMigrate(&entity.Transaction{})
 	log.Println("Database Migration Completed...")
 }

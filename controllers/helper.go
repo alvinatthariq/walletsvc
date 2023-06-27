@@ -55,7 +55,7 @@ func httpRespSuccess(w http.ResponseWriter, r *http.Request, statusCode int, res
 		if err != nil {
 			statusCode = http.StatusInternalServerError
 		}
-	case entity.CustomerToken:
+	case entity.AccountWallet:
 		httpResp := &entity.HTTPInitWalletResp{
 			Data: entity.HTTPInitWalletData{
 				Token: data.Token,

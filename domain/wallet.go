@@ -13,13 +13,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func (d *domain) InitAccountWallet(customerID string) (customerToken entity.CustomerToken, err error) {
-	tx := d.gorm.First(&customerToken, "customer_id = ?", customerID)
+func (d *domain) InitAccountWallet(customerID string) (accountWallet entity.AccountWallet, err error) {
+	tx := d.gorm.First(&accountWallet, "customer_id = ?", customerID)
 	err = tx.Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// generate token if not exist
-			customerToken = entity.CustomerToken{
+			// create account wallet if not exist
+			accountWallet = entity.AccountWallet{
 				CustomerID: customerID,
 				Token:      generateSecureToken(42),
 				CreatedAt:  time.Now().UTC(),
@@ -27,31 +27,31 @@ func (d *domain) InitAccountWallet(customerID string) (customerToken entity.Cust
 			}
 
 			// create to db
-			tx := d.gorm.Create(&customerToken)
+			tx := d.gorm.Create(&accountWallet)
 			err = tx.Error
 			if err != nil {
 				var mysqlError *mysql.MySQLError
 				if errors.As(err, &mysqlError) {
 					// check duplicate constraint
 					if mysqlError.Number == entity.CodeMySQLDuplicateEntry {
-						return customerToken, entity.ErrorAccountAlreadyExist
+						return accountWallet, entity.ErrorAccountWalletAlreadyExist
 					}
 				}
 
-				return customerToken, err
+				return accountWallet, err
 			}
 
-			return customerToken, nil
+			return accountWallet, nil
 		}
 
-		return customerToken, err
+		return accountWallet, err
 	}
 
-	return customerToken, nil
+	return accountWallet, nil
 }
 
 func (d *domain) EnableWallet(token string) (wallet entity.Wallet, err error) {
-	customerToken, err := d.getCustomerTokenByToken(token)
+	customerToken, err := d.getAccountWalletByToken(token)
 	if err != nil {
 		return wallet, err
 	}
@@ -116,7 +116,7 @@ func generateSecureToken(length int) string {
 }
 
 func (d *domain) GetWallet(token string) (wallet entity.Wallet, err error) {
-	customerToken, err := d.getCustomerTokenByToken(token)
+	customerToken, err := d.getAccountWalletByToken(token)
 	if err != nil {
 		return wallet, err
 	}
@@ -134,16 +134,16 @@ func (d *domain) GetWallet(token string) (wallet entity.Wallet, err error) {
 	return wallet, nil
 }
 
-func (d *domain) getCustomerTokenByToken(token string) (customerToken entity.CustomerToken, err error) {
-	tx := d.gorm.First(&customerToken, "token = ?", token)
+func (d *domain) getAccountWalletByToken(token string) (accountWallet entity.AccountWallet, err error) {
+	tx := d.gorm.First(&accountWallet, "token = ?", token)
 	err = tx.Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return customerToken, entity.ErrorInvalidAuthToken
+			return accountWallet, entity.ErrorInvalidAuthToken
 		}
 
-		return customerToken, err
+		return accountWallet, err
 	}
 
-	return customerToken, nil
+	return accountWallet, nil
 }

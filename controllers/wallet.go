@@ -23,11 +23,7 @@ func (c *controller) InitAccountWallet(w http.ResponseWriter, r *http.Request) {
 func (c *controller) EnableWallet(w http.ResponseWriter, r *http.Request) {
 	authorization := r.Header.Get("Authorization")
 
-	token, err := getTokenFromAuth(authorization)
-	if err != nil {
-		httpRespError(w, r, err, http.StatusUnauthorized)
-		return
-	}
+	token := strings.Replace(authorization, "Token ", "", -1)
 
 	wallet, err := c.domain.EnableWallet(token)
 	if err != nil {
@@ -46,25 +42,10 @@ func (c *controller) EnableWallet(w http.ResponseWriter, r *http.Request) {
 	httpRespSuccess(w, r, http.StatusOK, wallet, nil)
 }
 
-func getTokenFromAuth(auth string) (token string, err error) {
-	authSplit := strings.Split(auth, " ")
-	if len(authSplit) < 2 {
-		return token, entity.ErrorInvalidAuthToken
-	}
-
-	token = authSplit[1]
-
-	return token, nil
-}
-
 func (c *controller) GetWallet(w http.ResponseWriter, r *http.Request) {
 	authorization := r.Header.Get("Authorization")
 
-	token, err := getTokenFromAuth(authorization)
-	if err != nil {
-		httpRespError(w, r, err, http.StatusUnauthorized)
-		return
-	}
+	token := strings.Replace(authorization, "Token ", "", -1)
 
 	wallet, err := c.domain.GetWallet(token)
 	if err != nil {

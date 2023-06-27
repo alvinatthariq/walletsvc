@@ -13,7 +13,7 @@ type domain struct {
 }
 
 type DomainItf interface {
-	InitAccountWallet(customerID string) (customerToken entity.CustomerToken, err error)
+	InitAccountWallet(customerID string) (accountWallet entity.AccountWallet, err error)
 	EnableWallet(token string) (wallet entity.Wallet, err error)
 	GetWallet(token string) (wallet entity.Wallet, err error)
 }
