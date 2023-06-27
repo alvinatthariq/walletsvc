@@ -23,3 +23,12 @@ type Deposit struct {
 	Amount      float64
 	ReferenceID string
 }
+
+type Withdraw struct {
+	ID          string
+	WithdrawnBy string
+	Status      string
+	WithdrawnAt time.Time
+	Amount      float64
+	ReferenceID string
+}

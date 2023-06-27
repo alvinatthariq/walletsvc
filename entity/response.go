@@ -48,3 +48,12 @@ type HTTPDepositResp struct {
 type HTTPDepositData struct {
 	Deposit Deposit `json:"deposit"`
 }
+
+type HTTPWithdrawResp struct {
+	Status string           `json:"status"`
+	Data   HTTPWithdrawData `json:"data"`
+}
+
+type HTTPWithdrawData struct {
+	Withdraw Withdraw `json:"withdraw"`
+}

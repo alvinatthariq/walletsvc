@@ -143,6 +143,9 @@ func (c *controller) CreateWalletDeposit(w http.ResponseWriter, r *http.Request)
 		} else if errors.Is(err, entity.ErrorDepositReferenceIDMustBeUnique) {
 			httpRespError(w, r, err, http.StatusBadRequest)
 			return
+		} else if errors.Is(err, entity.ErrorDepositAmountMustBeGreaterThan0) {
+			httpRespError(w, r, err, http.StatusBadRequest)
+			return
 		}
 
 		httpRespError(w, r, err, http.StatusInternalServerError)
@@ -150,4 +153,44 @@ func (c *controller) CreateWalletDeposit(w http.ResponseWriter, r *http.Request)
 	}
 
 	httpRespSuccess(w, r, http.StatusOK, deposit, nil)
+}
+
+func (c *controller) CreateWalletWithdraw(w http.ResponseWriter, r *http.Request) {
+	authorization := r.Header.Get("Authorization")
+
+	token := strings.Replace(authorization, "Token ", "", -1)
+
+	amountStr := r.FormValue("amount")
+	refID := r.FormValue("reference_id")
+
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		httpRespError(w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	withdraw, err := c.domain.CreateWalletWithdraw(token, amount, refID)
+	if err != nil {
+		if errors.Is(err, entity.ErrorInvalidAuthToken) {
+			httpRespError(w, r, err, http.StatusUnauthorized)
+			return
+		} else if errors.Is(err, entity.ErrorWalletNotFound) {
+			httpRespError(w, r, err, http.StatusBadRequest)
+			return
+		} else if errors.Is(err, entity.ErrorWalletDisabled) {
+			httpRespError(w, r, err, http.StatusBadRequest)
+			return
+		} else if errors.Is(err, entity.ErrorWithdrawReferenceIDMustBeUnique) {
+			httpRespError(w, r, err, http.StatusBadRequest)
+			return
+		} else if errors.Is(err, entity.ErrorBalanceNotEnough) {
+			httpRespError(w, r, err, http.StatusBadRequest)
+			return
+		}
+
+		httpRespError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	httpRespSuccess(w, r, http.StatusOK, withdraw, nil)
 }

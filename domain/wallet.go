@@ -216,6 +216,10 @@ func (d *domain) CreateWalletDeposit(token string, amount float64, refID string)
 		ReferenceID: refID,
 	}
 
+	if deposit.Amount <= 0 {
+		return deposit, entity.ErrorDepositAmountMustBeGreaterThan0
+	}
+
 	err = d.gorm.Transaction(func(tx *gorm.DB) error {
 		// create transaction
 		transaction := entity.Transaction{
@@ -250,4 +254,68 @@ func (d *domain) CreateWalletDeposit(token string, amount float64, refID string)
 	})
 
 	return deposit, err
+}
+
+func (d *domain) CreateWalletWithdraw(token string, amount float64, refID string) (withdraw entity.Withdraw, err error) {
+	customerToken, err := d.getAccountWalletByToken(token)
+	if err != nil {
+		return withdraw, err
+	}
+
+	wallet, err := d.getWalletByCustomerID(customerToken.CustomerID)
+	if err != nil {
+		return withdraw, err
+	}
+
+	if wallet.Status == "disabled" {
+		return withdraw, entity.ErrorWalletDisabled
+	}
+
+	withdraw = entity.Withdraw{
+		ID:          uuid.New().String(),
+		WithdrawnBy: customerToken.CustomerID,
+		Status:      "success",
+		WithdrawnAt: time.Now().UTC(),
+		Amount:      amount,
+		ReferenceID: refID,
+	}
+
+	if withdraw.Amount > wallet.Balance {
+		return withdraw, entity.ErrorBalanceNotEnough
+	}
+
+	err = d.gorm.Transaction(func(tx *gorm.DB) error {
+		// create transaction
+		transaction := entity.Transaction{
+			ID:              withdraw.ID,
+			ReferenceID:     withdraw.ReferenceID,
+			Type:            "withdraw",
+			OwnedBy:         withdraw.WithdrawnBy,
+			Amount:          withdraw.Amount,
+			PreviousBalance: wallet.Balance,
+			CurrentBalance:  wallet.Balance - amount,
+			CreatedAt:       withdraw.WithdrawnAt,
+		}
+		if err := tx.Create(transaction).Error; err != nil {
+			var mysqlError *mysql.MySQLError
+			if errors.As(err, &mysqlError) {
+				// check duplicate constraint
+				if mysqlError.Number == entity.CodeMySQLDuplicateEntry {
+					return entity.ErrorWithdrawReferenceIDMustBeUnique
+				}
+			}
+
+			return err
+		}
+
+		// update wallet balance
+		wallet.Balance -= amount
+		if err := tx.Save(wallet).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return withdraw, err
 }
