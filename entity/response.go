@@ -30,3 +30,12 @@ type HTTPWalletResp struct {
 type HTTPWalletData struct {
 	Wallet Wallet `json:"wallet"`
 }
+
+type HTTPTransactionResp struct {
+	Status string              `json:"status"`
+	Data   HTTPTransactionData `json:"data"`
+}
+
+type HTTPTransactionData struct {
+	Transactions []Transaction `json:"transactions"`
+}

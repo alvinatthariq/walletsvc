@@ -77,6 +77,17 @@ func httpRespSuccess(w http.ResponseWriter, r *http.Request, statusCode int, res
 		if err != nil {
 			statusCode = http.StatusInternalServerError
 		}
+	case []entity.Transaction:
+		httpResp := &entity.HTTPTransactionResp{
+			Data: entity.HTTPTransactionData{
+				Transactions: data,
+			},
+			Status: "success",
+		}
+		raw, err = json.Marshal(httpResp)
+		if err != nil {
+			statusCode = http.StatusInternalServerError
+		}
 
 	default:
 		httpRespError(w, r, fmt.Errorf("cannot cast type of %+v", data), http.StatusInternalServerError)

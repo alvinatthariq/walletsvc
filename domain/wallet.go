@@ -121,13 +121,8 @@ func (d *domain) GetWallet(token string) (wallet entity.Wallet, err error) {
 		return wallet, err
 	}
 
-	tx := d.gorm.First(&wallet, "owned_by = ?", customerToken.CustomerID)
-	err = tx.Error
+	wallet, err = d.getWalletByCustomerID(customerToken.CustomerID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return wallet, entity.ErrorWalletNotFound
-		}
-
 		return wallet, err
 	}
 
@@ -146,4 +141,39 @@ func (d *domain) getAccountWalletByToken(token string) (accountWallet entity.Acc
 	}
 
 	return accountWallet, nil
+}
+
+func (d *domain) getWalletByCustomerID(customerID string) (wallet entity.Wallet, err error) {
+	tx := d.gorm.First(&wallet, "owned_by = ?", customerID)
+	err = tx.Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return wallet, entity.ErrorWalletNotFound
+		}
+
+		return wallet, err
+	}
+
+	return wallet, nil
+}
+
+func (d *domain) GetWalletTransaction(token string) (transactions []entity.Transaction, err error) {
+	customerToken, err := d.getAccountWalletByToken(token)
+	if err != nil {
+		return transactions, err
+	}
+
+	wallet, err := d.getWalletByCustomerID(customerToken.CustomerID)
+	if err != nil {
+		return transactions, err
+	}
+
+	if wallet.Status == "disabled" {
+		return transactions, entity.ErrorWalletDisabled
+	}
+
+	tx := d.gorm.Where("owned_by = ?", customerToken.CustomerID).Find(&transactions)
+	err = tx.Error
+
+	return transactions, err
 }
